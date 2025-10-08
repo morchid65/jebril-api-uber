@@ -3,23 +3,23 @@
 header('Content-Type: application/json');
 
 // Inclusions (chemins robustes)
-require_once __DIR__ . '/controllers/ChauffeurController.php';
-require_once __DIR__ . '/controllers/ArticleController.php';
-require_once __DIR__ . '/controllers/CategorieController.php';
-require_once __DIR__ . '/controllers/CommandeController.php';
-require_once __DIR__ . '/controllers/ClientController.php';
+require_once __DIR__ . '/Controllers/ChauffeurControllers.php';
+require_once __DIR__ . '/Controllers/ArticlesController.php';
+require_once __DIR__ . '/Controllers/CategorieControllers.php';
+require_once __DIR__ . '/Controllers/CommandesControllers.php';
+require_once __DIR__ . '/Controllers/ClientControllers.php';
 
 // Instanciation des contrôleurs
-$chauffeurController = new ChauffeurController();
-$articleController   = new ArticleController();
-$categorieController = new CategorieController();
-$commandeController  = new CommandeController();
-$clientController    = new ClientController();
+$chauffeurController = new ChauffeurControllers();
+$articleController   = new ArticlesController();
+$categorieController = new CategorieControllers();
+$commandeController  = new CommandesControllers();
+$clientController    = new ClientControllers();
 
 // Vérifie si le paramètre "page" est vide ou non présent dans l'URL
 if (empty($_GET['page'])) {
     http_response_code(404);
-    echo json_encode(['error' => "La page n'existe pas"]);
+    echo json_encode(['error' => "Le paramètre 'page' est manquant"]);
     exit;
 }
 
@@ -29,65 +29,57 @@ $url = explode('/', $_GET['page']);
 // Fonction utilitaire pour appeler la méthode d'un contrôleur
 function callControllerMethod($controller, $method, $param = null) {
     if (!method_exists($controller, $method)) {
-        echo json_encode(['error' => "Méthode $method non définie dans le contrôleur"]);
+        http_response_code(400);
+        echo json_encode(['error' => "Méthode '$method' non définie dans le contrôleur"]);
         return;
     }
-    if ($param !== null) {
-        $controller->$method($param);
-    } else {
-        $controller->$method();
+
+    try {
+        if ($param !== null) {
+            $controller->$method($param);
+        } else {
+            $controller->$method();
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['error' => "Erreur interne : " . $e->getMessage()]);
     }
 }
 
 // Routeur principal
-switch ($url[0]) {
+switch (strtolower($url[0])) {
     case 'chauffeurs':
-        if (isset($url[1])) {
-            $id = intval($url[1]);
-            callControllerMethod($chauffeurController, 'getChauffeurById', $id);
-        } else {
-            callControllerMethod($chauffeurController, 'getAllChauffeurs');
-        }
+        $method = isset($url[1]) ? 'getChauffeurById' : 'getAllChauffeurs';
+        $param  = isset($url[1]) ? intval($url[1]) : null;
+        callControllerMethod($chauffeurController, $method, $param);
         break;
 
     case 'articles':
-        if (isset($url[1])) {
-            $id = intval($url[1]);
-            callControllerMethod($articleController, 'getArticleById', $id);
-        } else {
-            callControllerMethod($articleController, 'getAllArticles');
-        }
+        $method = isset($url[1]) ? 'getArticleById' : 'getAllArticles';
+        $param  = isset($url[1]) ? intval($url[1]) : null;
+        callControllerMethod($articleController, $method, $param);
         break;
 
     case 'categories':
-        if (isset($url[1])) {
-            $id = intval($url[1]);
-            callControllerMethod($categorieController, 'getCategorieById', $id);
-        } else {
-            callControllerMethod($categorieController, 'getAllCategories');
-        }
+        $method = isset($url[1]) ? 'getCategorieById' : 'getAllCategories';
+        $param  = isset($url[1]) ? intval($url[1]) : null;
+        callControllerMethod($categorieController, $method, $param);
         break;
 
     case 'commandes':
-        if (isset($url[1])) {
-            $id = intval($url[1]);
-            callControllerMethod($commandeController, 'getCommandeById', $id);
-        } else {
-            callControllerMethod($commandeController, 'getAllCommandes');
-        }
+        $method = isset($url[1]) ? 'getCommandeById' : 'getAllCommandes';
+        $param  = isset($url[1]) ? intval($url[1]) : null;
+        callControllerMethod($commandeController, $method, $param);
         break;
 
     case 'clients':
-        if (isset($url[1])) {
-            $id = intval($url[1]);
-            callControllerMethod($clientController, 'getClientById', $id);
-        } else {
-            callControllerMethod($clientController, 'getAllClients');
-        }
+        $method = isset($url[1]) ? 'getClientById' : 'getAllClients';
+        $param  = isset($url[1]) ? intval($url[1]) : null;
+        callControllerMethod($clientController, $method, $param);
         break;
 
     default:
         http_response_code(404);
-        echo json_encode(['error' => "La page n'existe pas"]);
+        echo json_encode(['error' => "La ressource '" . htmlspecialchars($url[0]) . "' est inconnue"]);
         break;
 }
