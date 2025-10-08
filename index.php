@@ -1,4 +1,21 @@
 <?php
+// Inclusion des contrôleurs avec des chemins robustes
+require_once __DIR__ . '/controllers/ChauffeurController.php';
+require_once __DIR__ . '/controllers/ArticleController.php';
+require_once __DIR__ . '/controllers/CategorieController.php';
+require_once __DIR__ . '/controllers/CommandeController.php';
+require_once __DIR__ . '/controllers/ClientController.php';
+
+// Instanciation des contrôleurs
+$chauffeurController = new ChauffeurController();
+$articleController = new ArticleController();
+$categorieController = new CategorieController();
+$commandeController = new CommandeController();
+$clientController = new ClientController();
+
+// Définir le header JSON
+header('Content-Type: application/json');
+
 // Vérifie si le paramètre "page" est vide ou non présent dans l'URL
 if (empty($_GET["page"])) {
     echo json_encode(["error" => "La page n'existe pas"]);
