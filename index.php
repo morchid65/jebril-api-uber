@@ -1,38 +1,75 @@
 <?php
 // Vérifie si le paramètre "page" est vide ou non présent dans l'URL
 if (empty($_GET["page"])) {
-    // Si le paramètre est vide, on affiche un message d'erreur
-    echo "Cette page est introuvable.";
-} else {
-    // Sinon, on récupère la valeur du paramètre "page"
-    // Par exemple, si l’URL est : index.php?page=chauffeurs/3
-    // Alors $_GET["page"] vaut "chauffeurs/3"
-    
-    // On découpe cette chaîne en segments, en séparant sur le caractère "/"
-    // Cela donne un tableau, ex : ["chauffeurs", "3"]
-    $url = explode("/", $_GET['page']);
-    
-    // Affiche le contenu du tableau pour vérifier comment l’URL est interprétée
-    print_r($url);
+    echo json_encode(["error" => "La page n'existe pas"]);
+    exit;
+}
 
-    // On teste le premier segment pour déterminer la ressource demandée
-    switch($url[0]) {
-        case "chauffeurs" : 
-            // Si un second segment est présent (ex: un ID), on l’utilise
-            if (isset($url[1])) {
-                // Exemple : /chauffeurs/3 → affiche les infos du chauffeur 3
-                echo "Afficher les informations du chauffeur : ". $url[1];
-            } else {
-                // Sinon, on affiche tous les chauffeurs
-                echo "Afficher les informations des chauffeurs";
-            }
-            break;
-        
-        // Si la ressource n'existe pas, on renvoie un message d’erreur
-        default :
-            echo "La page n'existe pas";
+// On récupère la valeur du paramètre "page"
+$url = explode("/", $_GET['page']);
+
+// Fonction pour appeler une méthode si elle existe, sinon renvoyer une erreur
+function callControllerMethod($controller, $method, $param = null) {
+    if (method_exists($controller, $method)) {
+        if ($param !== null) {
+            $controller->$method($param);
+        } else {
+            $controller->$method();
+        }
+    } else {
+        echo json_encode(["error" => "Méthode $method non définie dans le contrôleur"]);
     }
 }
+
+// Routeur principal
+switch ($url[0]) {
+    case "chauffeurs":
+        if (isset($url[1])) {
+            $id = intval($url[1]);
+            callControllerMethod($chauffeurController, "getChauffeurById", $id);
+        } else {
+            callControllerMethod($chauffeurController, "getAllChauffeurs");
+        }
+        break;
+
+    case "articles":
+        if (isset($url[1])) {
+            $id = intval($url[1]);
+            callControllerMethod($articleController, "getArticleById", $id);
+        } else {
+            callControllerMethod($articleController, "getAllArticles");
+        }
+        break;
+
+    case "categories":
+        if (isset($url[1])) {
+            $id = intval($url[1]);
+            callControllerMethod($categorieController, "getCategorieById", $id);
+        } else {
+            callControllerMethod($categorieController, "getAllCategories");
+        }
+        break;
+
+    case "commandes":
+        if (isset($url[1])) {
+            $id = intval($url[1]);
+            callControllerMethod($commandeController, "getCommandeById", $id);
+        } else {
+            callControllerMethod($commandeController, "getAllCommandes");
+        }
+        break;
+
+    case "clients":
+        if (isset($url[1])) {
+            $id = intval($url[1]);
+            callControllerMethod($clientController, "getClientById", $id);
+        } else {
+            callControllerMethod($clientController, "getAllClients");
+        }
+        break;
+
+    default:
+        echo json_encode(["error" => "La page n'existe pas"]);
+        break;
+}
 ?>
-
-
